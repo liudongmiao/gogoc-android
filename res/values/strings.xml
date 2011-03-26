@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gogoc</string>
+    <string name="name">Gogoc</string>
+    <string name="text">Freenet6 IPv6 tunnel brokers.</string>
+    <string name="logtext">Click the Status Icon to show Gogoc log.</string>
+    <string name="click">Click again to hide Gogoc log.</string>
+    <string name="contact">Liu DongMiao &lt;liudongmiao@gmail.com&gt;</string>
+    <string name="running">Getting IPv6 from Freenet6...</string>
+    <string name="module_error">Cannot Initial tun Module.</string>
+    <string name="unpack_error">Cannot Unpack Essential Files.</string>
+    <string name="gogoc_error">Cannot Run Gogoc.</string>
+    <string name="ipv6_error">IPv6 is not supported.</string>
+</resources>

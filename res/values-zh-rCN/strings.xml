@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gogoc</string>
+    <string name="name">Gogoc</string>
+    <string name="text">Freenet6提供的IPv6通道。</string>
+    <string name="logtext">点击状态图标显示Gogoc日志。</string>
+    <string name="click">再次点击隐藏Gogoc日志</string>
+    <string name="contact">Liu DongMiao &lt;liudongmiao@gmail.com&gt;</string>
+    <string name="running">正在与Freenet6建立IPv6通道……</string>
+    <string name="module_error">无法加载tun模块。</string>
+    <string name="unpack_error">无法生成一些必要的文件。</string>
+    <string name="gogoc_error">无法运行Gogoc。</string>
+    <string name="ipv6_error">设备不支持IPv6。</string>
+</resources>

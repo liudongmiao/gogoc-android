@@ -1,0 +1,20 @@
+1. About GogoCLIENT
+   Please visit http://gogonet.gogo6.com
+   For the license, please refer native/gogoc-1_2-RELEASE/CLIENT-LICENSE.TXT. 
+   gogoCLIENT and gogo6 are trademarks of gogo6, inc.
+ 
+2. About Pictures
+   1). icon.png, (c) Gogo6.com
+   2). online.png, offline.png, running.png
+       http://developer.android.com/resources/tutorials/views/hello-formstuff.html
+
+3. About tun.ko
+   TUN/TAP is essential to support Gogoc.
+   Most of Android are behind NAT, then sit is not supported.
+
+4. About authentication
+   This version doesn't support openssl based authentication.
+   And there is no way to specify the configuration from UI.
+
+5. About the change and UI
+   (c) by Liu DongMiao <liudongmiao # gmail.com>
