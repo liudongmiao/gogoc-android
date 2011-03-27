@@ -27,6 +27,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+
 public class GogocActivity extends Activity
 {
 	private TextView text;
@@ -40,6 +43,7 @@ public class GogocActivity extends Activity
 	private final int CLEAR = 2;
 
 	private Thread thread = null;
+	private boolean showassets;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -52,6 +56,7 @@ public class GogocActivity extends Activity
 		logtext = (TextView) findViewById(R.id.logtext);
 		logtext.setText(R.string.contact);
 
+		showassets = true;
 		status = (ImageView) findViewById(R.id.status);
 		status.setImageResource(R.drawable.offline);
 		status.setOnClickListener(new OnClickListener() {
@@ -96,6 +101,7 @@ public class GogocActivity extends Activity
 				logtext.setText(R.string.contact);
 				if (content.compareTo("module") == 0) {
 					text.setText(R.string.module_error);
+					showdialog();
 				} else if (content.compareTo("unpack") == 0) {
 					text.setText(R.string.unpack_error);
 				} else if (content.compareTo("gogoc") == 0) {
@@ -142,6 +148,7 @@ public class GogocActivity extends Activity
 
 	@Override
 	protected void onStop() {
+		showassets = false;
 		if (receiver != null) {
 			unregisterReceiver(receiver);
 		}
@@ -249,4 +256,22 @@ public class GogocActivity extends Activity
 			}
 		}
 	};
+
+	private void showdialog() {
+		if (showassets) {
+			new AlertDialog.Builder(this)
+				.setTitle(R.string.tun)
+				.setMessage(R.string.tunerror)
+				.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener(){
+					public void onClick(DialogInterface di, int i) {
+						startActivity(new Intent(GogocActivity.this, GogocHelp.class));
+					}
+				})
+			.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener(){
+				public void onClick(DialogInterface di, int i) {
+				}
+			})
+			.show();
+		}
+	}
 }

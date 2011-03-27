@@ -11,4 +11,9 @@
     <string name="unpack_error">无法生成一些必要的文件。</string>
     <string name="gogoc_error">无法运行Gogoc。</string>
     <string name="ipv6_error">设备不支持IPv6。</string>
+    <string name="tun">TUN/TAP模块</string>
+    <string name="tunerror">无法加载TUN/TAP模块，请复制一份到&lt;SDCARD&gt;/.gogoc/tun.ko。您是否需要查看手动编译的教程？</string>
+    <string name="ok">确定</string>
+    <string name="cancel">退出</string>
+    <string name="help">zh.htm</string>
 </resources>

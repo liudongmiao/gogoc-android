@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+	<head>
+		<title>TUN/TAP模块</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<style>
+			h1 { margin: 0px; }
+			a { text-decoration: none; }
+			ol { padding: 0px 0px 0px 1.2em; margin: 0px; }
+			li { padding: 0px; margin: 0px; }
+		</style>
+	</head>
+	<body>
+		<h1>TUN/TAP模块</h1>
+		<ol>
+			<li>
+			<h4>获取内核源代码</h4>
+			如果厂商没有提供内核源代码，请从 <a href="http://www.kernel.org">www.kernel.org</a> 下载。
+<pre>
+Android 2.1: 2.6.29
+Android 2.2: 2.6.32
+Android 2.3: 2.6.35
+</pre>
+			请下载正确的内核版本。
+			</li>
+			<li>
+			<h4>获取内核config</h4>
+			通常情况下，在系统里会有<code>/proc/config.gz</code>文件。
+			从设备中下载，解压，添加一行<strong><code>CONFIG_TUN=m</code></strong>。<br>
+			以下是一些可能有用的脚本：
+			</p>
+<pre>
+$ adb -d pull /proc/config.gz
+$ gunzip config.gz
+$ echo 'CONFIG_TUN=m' &gt;&gt; config
+</pre>
+			如果出现错误，请检查是否输入有误。
+			</li>
+			<li>
+			<h4>编译TUN/TAP模块</h4>
+			您需要安装android-ndk，设置正确的环境变量，编译TUN/TAP模块。
+<pre>
+$ cd &lt;kernel_source&gt;
+$ cp config .config
+$ make ARCH=arm \
+    CROSS_COMPILE=arm-eabi- \
+    drivers/net/tun.ko
+$ arm-eabi-strip --strip-debug \
+    drivers/net/tun.ko
+</pre>
+			strip是可选的，但是它会使模块变小。
+			</li>
+			<li>
+			<h4>上传模块到设备</h4>
+			在sdcard中建立<code>.gogoc</code>文件夹，把tun.ko上传到这里。
+<pre>
+$ adb shell mkdir /sdcard/.gogoc
+$ adb push drivers/net/tun.ko \
+    /sdcard/.gogoc/tun.ko
+</pre>
+			现在，一切已经完成。
+			</li>
+		</ol>
+	</body>
+</html>
+<!-- vim: set sw=4 ts=4: -->

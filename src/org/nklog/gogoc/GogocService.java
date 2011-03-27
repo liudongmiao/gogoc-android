@@ -28,13 +28,17 @@ public class GogocService extends Service
 	private final String TAG = "GogocService";
 	private Thread thread = null;
 
+	private final String TUNPATH = "/sdcard/.gogoc/tun.ko";
+
 	@Override
 	public void onCreate()
 	{
 		receiver = new Receiver();
 
 		unpack |= unpackRaw(R.raw.gogoc, "gogoc", true);
-		unpack |= unpackRaw(R.raw.tun, "tun.ko", false);
+		if (!hastun()) {
+			unpack |= unpackRaw(R.raw.tun, "tun.ko", false);
+		}
 
 		super.onCreate();
 	}
@@ -107,16 +111,24 @@ public class GogocService extends Service
 
 		File devtun = new File("/dev/tun");
 		if (!devtun.exists()) {
-			Process gettun = null;
+			String path = null;
+			Process settun = null;
+			if (hastun()) {
+				path = TUNPATH;
+			} else {
+				path = getFileStreamPath("tun.ko").getAbsolutePath();
+			}
+
+			Log.d(TAG, "tun.ko path is " + path);
 			try {
-				gettun = new ProcessBuilder()
-					.command("su", "-c", "insmod " + getFileStreamPath("tun.ko").getAbsolutePath())
+				settun = new ProcessBuilder()
+					.command("su", "-c", "insmod " + path)
 					.start();
-				retcode = gettun.waitFor();
+				retcode = settun.waitFor();
 			} catch (Exception e) {
 				Log.d(TAG, "insmod tun.ko failed", e);
-				if (gettun != null) {
-					gettun.destroy();
+				if (settun != null) {
+					settun.destroy();
 				}
 			}
 			if (retcode != 0) {
@@ -270,5 +282,10 @@ public class GogocService extends Service
 				Log.d(TAG, "Process", e);
 			}
 		}
+	}
+
+	private boolean hastun() {
+		File tun = new File(TUNPATH);
+		return tun.exists();
 	}
 }

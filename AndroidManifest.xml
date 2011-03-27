@@ -5,13 +5,14 @@
     android:versionName="1.0">
     <application android:label="@string/app_name" android:icon="@drawable/icon">
         <activity android:name=".GogocActivity"
-            android:theme="@android:style/Theme.NoTitleBar"
-            android:label="@string/app_name">
+            android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".GogocHelp"
+            android:theme="@android:style/Theme.NoTitleBar" />
         <service android:name=".GogocService">
             <intent-filter>
                 <action android:name="org.nklog.gogoc.GogocService" />

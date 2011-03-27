@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+	<head>
+		<title>TUN/TAP Module</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<style>
+			h1 { margin: 0px; }
+			a { text-decoration: none; }
+			ol { padding: 0px 0px 0px 1.2em; margin: 0px; }
+			li { padding: 0px; margin: 0px; }
+		</style>
+	</head>
+	<body>
+		<h1>TUN/TAP Module</h1>
+		<ol>
+			<li>
+			<h4>Get a copy of kernel source</h4>
+			If you cannot get the kernel source from Vendor, please download it from <a href="http://www.kernel.org">www.kernel.org</a>.
+<pre>
+Android 2.1: 2.6.29
+Android 2.2: 2.6.32
+Android 2.3: 2.6.35
+</pre>
+			Please download the correct kernel version.
+			</li>
+			<li>
+			<h4>Get the kernel config</h4>
+			Normally, there is a <code>/proc/config.gz</code> in the system. <br>
+			Download from device, uncompress, and add a line <strong><code>CONFIG_TUN=m</code></strong>.<br>
+			Here is some shell script:
+			</p>
+<pre>
+$ adb -d pull /proc/config.gz
+$ gunzip config.gz
+$ echo 'CONFIG_TUN=m' &gt;&gt; config
+</pre>
+			If there's any error, please check and fix it.
+			</li>
+			<li>
+			<h4>Compile the tun module</h4>
+			You need install android-ndk. Set the essential variables, compile the tun module.
+<pre>
+$ cd &lt;kernel_source&gt;
+$ cp config .config
+$ make ARCH=arm \
+    CROSS_COMPILE=arm-eabi- \
+    drivers/net/tun.ko
+$ arm-eabi-strip --strip-debug \
+    drivers/net/tun.ko
+</pre>
+			Strip is optional, but it shrinks the size.
+			</li>
+			<li>
+			<h4>Upload to device</h4>
+			Create directory <code>.gogoc</code> in sdcard, upload tun.ko to it.
+<pre>
+$ adb shell mkdir /sdcard/.gogoc
+$ adb push drivers/net/tun.ko \
+    /sdcard/.gogoc/tun.ko
+</pre>
+			Now you have maken the right tun/tap module for your device.
+			</li>
+		</ol>
+	</body>
+</html>
+<!-- vim: set sw=4 ts=4: -->
