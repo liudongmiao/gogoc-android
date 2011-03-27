@@ -37,6 +37,7 @@ public class GogocActivity extends Activity
 
 	private final String TAG = "GogocActivity";
 	private final int LOG = 1;
+	private final int CLEAR = 2;
 
 	private Thread thread = null;
 
@@ -56,11 +57,10 @@ public class GogocActivity extends Activity
 		status.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (thread == null) {
-					displayLog();
+					displayLog(true);
 					Toast.makeText(GogocActivity.this, R.string.click, Toast.LENGTH_LONG).show();
 				} else {
-					thread.interrupt();
-					thread = null;
+					displayLog(false);
 					logtext.setText(R.string.logtext);
 				}
 			}
@@ -71,8 +71,9 @@ public class GogocActivity extends Activity
 			public void onClick(View v) {
 				if (((CheckBox) v).isChecked()) {
 					startService(new Intent(GogocActivity.this, GogocService.class));
-					logtext.setText(R.string.logtext);
+					prepareLog();
 				} else {
+					displayLog(false);
 					text.setText(R.string.text);
 					logtext.setText(R.string.contact);
 					status.setImageResource(R.drawable.offline);
@@ -90,6 +91,7 @@ public class GogocActivity extends Activity
 			String content =  line.substring(1);
 			Log.d(TAG, "receive '" + line + "' from service");
 			if (tag.compareTo("E") == 0) {
+				displayLog(false);
 				checkbox.setChecked(false);
 				logtext.setText(R.string.contact);
 				if (content.compareTo("module") == 0) {
@@ -101,14 +103,18 @@ public class GogocActivity extends Activity
 				}
 			} else if (tag.compareTo("S") == 0) {
 				if (content.compareTo("online") == 0) {
+					prepareLog();
 					displayAddress();
 					checkbox.setChecked(true);
 					status.setImageResource(R.drawable.online);
 				} else if (content.compareTo("offline") == 0) {
+					displayLog(false);
 					checkbox.setChecked(false);
 					text.setText(R.string.text);
+					logtext.setText(R.string.contact);
 					status.setImageResource(R.drawable.offline);
 				} else if (content.compareTo("running") == 0) {
+					prepareLog();
 					checkbox.setChecked(true);
 					text.setText(R.string.running);
 					status.setImageResource(R.drawable.running);
@@ -125,8 +131,8 @@ public class GogocActivity extends Activity
 		registerReceiver(receiver, filter);
 
 		if (displayAddress()) {
+			prepareLog();
 			checkbox.setChecked(true);
-			logtext.setText(R.string.logtext);
 			status.setImageResource(R.drawable.online);
 		} else {
 			sendToService("status");
@@ -147,6 +153,7 @@ public class GogocActivity extends Activity
 		if (!checkbox.isChecked()) {
 			stopService(new Intent(GogocActivity.this, GogocService.class));
 		}
+		displayLog(false);
 		super.onDestroy();
 	}
 
@@ -162,7 +169,7 @@ public class GogocActivity extends Activity
 		boolean retcode = false;
 		try {
 			String line;
-			BufferedReader br = new BufferedReader(new FileReader("/proc/net/if_inet6"));
+			BufferedReader br = new BufferedReader(new FileReader("/proc/net/if_inet6"), 1024);
 			while ((line = br.readLine()) != null) {
 				if (line.contains("tun")) {
 					StringBuilder sb = new StringBuilder("");
@@ -188,11 +195,19 @@ public class GogocActivity extends Activity
 		return retcode;
 	}
 
-	private void displayLog() {
-		if (getFileStreamPath("gogoc.log").exists()) {
-			logtext.setText("");
+	private void displayLog(boolean flag) {
+		if (flag && thread == null && getFileStreamPath("gogoc.log").exists()) {
 			thread = new Thread(new Output(getFileStreamPath("gogoc.log")));
 			thread.start();
+		} else if (!flag && thread != null) {
+			thread.interrupt();
+			thread = null;
+		}
+	}
+
+	private void prepareLog() {
+		if (thread == null) {
+			logtext.setText(R.string.logtext);
 		}
 	}
 
@@ -203,6 +218,7 @@ public class GogocActivity extends Activity
 		}
 		public void run() {
 			BufferedReader br = null;
+			handler.obtainMessage(CLEAR, "").sendToTarget();
 			try{
 				br = new BufferedReader(new FileReader(file), 8192);
 				while (true) {
@@ -226,7 +242,11 @@ public class GogocActivity extends Activity
 	private final Handler handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			logtext.append((String)msg.obj);
+			if (msg.what == CLEAR) {
+				logtext.setText((String)msg.obj);
+			} else if (msg.what == LOG) {
+				logtext.append((String)msg.obj);
+			}
 		}
 	};
 }

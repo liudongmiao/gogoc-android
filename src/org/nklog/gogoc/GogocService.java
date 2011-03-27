@@ -105,9 +105,6 @@ public class GogocService extends Service
 			return true;
 		}
 
-		if (getFileStreamPath("gogoc.log").exists()) {
-			getFileStreamPath("gogoc.log").delete();
-		}
 		File devtun = new File("/dev/tun");
 		if (!devtun.exists()) {
 			Process gettun = null;
@@ -178,7 +175,7 @@ public class GogocService extends Service
 		// kill the daemon
 		String line = null;
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(getFileStreamPath("gogoc.pid")));
+			BufferedReader br = new BufferedReader(new FileReader(getFileStreamPath("gogoc.pid")), 1024);
 			line = br.readLine();
 			br.close();
 		} catch (Exception e) {
@@ -200,12 +197,17 @@ public class GogocService extends Service
 
 		Log.d(TAG, "process = " + (process != null));
 		if (process != null) {
+			// actually, we have killed -9 the process
 			process.destroy();
-			// actually, we have kill -9 the process
 			Log.d(TAG, "gogoc destroy");
 			retcode = process.exitValue();
 			Log.e(TAG, "gogoc exitValue: " + retcode);
 			process = null;
+		}
+
+		// ok, we have killed the process, then remove the pid
+		if (getFileStreamPath("gogoc.pid").exists()) {
+			getFileStreamPath("gogoc.pid").delete();
 		}
 
 		if (getFileStreamPath("gogoc.log").exists()) {
