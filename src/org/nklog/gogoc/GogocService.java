@@ -19,6 +19,10 @@ import android.util.Log;
 import java.io.FileReader;
 import java.io.BufferedReader;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+
 public class GogocService extends Service
 {
 	private int unpack = 0;
@@ -29,16 +33,15 @@ public class GogocService extends Service
 	private Thread thread = null;
 
 	private final String TUNPATH = "/sdcard/.gogoc/tun.ko";
+	private SharedPreferences preference;
 
 	@Override
 	public void onCreate()
 	{
 		receiver = new Receiver();
 
-		unpack |= unpackRaw(R.raw.gogoc, "gogoc", true);
-		if (!hastun()) {
-			unpack |= unpackRaw(R.raw.tun, "tun.ko", false);
-		}
+		preference= PreferenceManager.getDefaultSharedPreferences(this);
+		prepareRaw();
 
 		super.onCreate();
 	}
@@ -239,36 +242,44 @@ public class GogocService extends Service
 		}
 	}
 
-	private int unpackRaw(int resid, String filename, boolean executable) {
+	private int unpackRaw(boolean newversion, int resid, String filename, boolean executable) {
 		int retcode = 0;
-		try {
-			if (getFileStreamPath(filename).exists()) {
-				getFileStreamPath(filename).delete();
+
+		if (getFileStreamPath(filename).exists()) {
+			if (!newversion) {
+				return 0;
 			}
+			getFileStreamPath(filename).delete();
+		}
+
+		Log.d(TAG, String.format("unpack %s", filename));
+
+		try {
 			InputStream is = getResources().openRawResource(resid);
 			OutputStream os = openFileOutput(filename, MODE_WORLD_READABLE);
-			int len;
+			int length;
 			byte [] buffer = new byte[8192];
-			while((len = is.read(buffer)) >= 0) {
-				os.write(buffer, 0, len);
+			while((length = is.read(buffer)) >= 0) {
+				os.write(buffer, 0, length);
 			}
 			os.close();
 		} catch (Exception e) {
 			retcode = 1;
-			Log.e(TAG, "unpack " + filename, e);
+			Log.e(TAG, String.format("unpack %s", filename), e);
 		}
 		if (retcode == 0 && executable) {
 			Process chmod = null;
+			String command = String.format("chmod 555 %s", getFileStreamPath(filename).getAbsolutePath());
 			try {
-				chmod = Runtime.getRuntime().exec("chmod 555 " + getFileStreamPath(filename).getAbsolutePath());
+				chmod = Runtime.getRuntime().exec(command);
 				chmod.waitFor();
 			} catch (Exception e) {
 				if (chmod != null) chmod.destroy();
-				Log.e(TAG, "chmod 555 " + filename, e);
+				Log.e(TAG, command, e);
 				retcode = 1;
 			}
 		}
-		Log.d(TAG, "unpacked " + filename + ": " + retcode);
+		Log.d(TAG, String.format("unpacked %s: %d", filename, retcode));
 		return retcode;
 	}
 
@@ -287,5 +298,24 @@ public class GogocService extends Service
 	private boolean hastun() {
 		File tun = new File(TUNPATH);
 		return tun.exists();
+	}
+
+	private void prepareRaw()
+	{
+		int retcode = 0;
+		int versionCode = -1;
+		try {
+			versionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+		} catch (NameNotFoundException e) {
+		}
+		boolean newversion = (preference.getInt("versionCode", 0) != versionCode);
+
+		unpack |= unpackRaw(newversion, R.raw.gogoc, "gogoc", true);
+		if (!hastun()) {
+			unpack |= unpackRaw(newversion, R.raw.tun, "tun.ko", false);
+		}
+		if (newversion && unpack == 0) {
+			preference.edit().putInt("versionCode", versionCode).commit();
+		}
 	}
 }
