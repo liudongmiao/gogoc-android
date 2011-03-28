@@ -18,3 +18,11 @@
 
 5. About the change and UI
    (c) by Liu DongMiao <liudongmiao # gmail.com>
+
+6. Howto Compile
+   1). run `ndk-build' to compile `gogoc'
+   2). run `android update project -p .' to udate project
+       Note: target may need to be specified.
+   3). run `ant release` to generate apk file
+       Note: you should add signature in build.properties to install on device
+
