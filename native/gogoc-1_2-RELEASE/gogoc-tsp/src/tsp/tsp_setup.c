@@ -199,14 +199,96 @@ static int route(const char *name, const char *host, int prefix, int action)
   return retcode;
 }
 
-static void addroute() {
-  route("tun", "::", 0, 1);
-  route("tun", "2000::", 3, 1);
+static void addroute(const char *interface) {
+  route(interface, "::", 0, 1);
+  route(interface, "2000::", 3, 1);
 }
 
 static void delroute() {
   route(NULL, "::", 0, 0);
   route(NULL, "2000::", 3, 0);
+}
+
+#ifndef IP_DF
+#define IP_DF 0x4000
+#endif
+
+#ifndef SIOCDEVPRIVATE
+#define SIOCDEVPRIVATE 0x89F0
+#endif
+#define SIOCADDTUNNEL (SIOCDEVPRIVATE + 1)
+#define SIOCDELTUNNEL (SIOCDEVPRIVATE + 2)
+struct ip_tunnel_parm {
+  char        name[IFNAMSIZ];
+  int         link;
+  __be16      i_flags;
+  __be16      o_flags;
+  __be32      i_key;
+  __be32      o_key;
+ struct iphdr iph;
+};
+
+static int del_tunnel(const char *name)
+{
+  int sock, code;
+  struct ifreq ifr;
+  struct ip_tunnel_parm p;
+
+  if (!name || !name[0]) {
+    return -EINVAL;
+  }
+
+  memset(&p, 0, sizeof(p));
+  p.iph.version = 4;
+  p.iph.ihl = 5;
+  p.iph.frag_off = htons(IP_DF);
+  strncpy(p.name, name, IFNAMSIZ);
+
+  strncpy(ifr.ifr_name, name, IFNAMSIZ);
+  ifr.ifr_ifru.ifru_data = &p;
+
+  sock = socket(AF_INET, SOCK_DGRAM, 0);
+  code = ioctl(sock, SIOCDELTUNNEL, &ifr);
+  if (code) {
+    fprintf(stderr, "delete tunnel %s failed: %s\n",
+        ifr.ifr_name, strerror(errno));
+  }
+  close(sock);
+  return code;
+}
+
+static int add_tunnel(const char *name, const char *remote, const char *local)
+{
+  int sock, code;
+  struct ifreq ifr;
+  struct ip_tunnel_parm p;
+
+  if (!name || !name[0] || !remote || !remote[0]) {
+    return -EINVAL;
+  }
+
+  memset(&p, 0, sizeof(p));
+  p.iph.version = 4;
+  p.iph.ihl = 5;
+  p.iph.frag_off = htons(IP_DF);
+  p.iph.protocol = IPPROTO_IPV6;
+  p.iph.ttl = 64;
+  inet_pton(AF_INET, remote, &(p.iph.daddr));
+  if (local && local[0]) {
+    inet_pton(AF_INET, local, &(p.iph.saddr));
+  }
+  strncpy(p.name, name, IFNAMSIZ);
+
+  strncpy(ifr.ifr_name, "sit0", IFNAMSIZ);
+  ifr.ifr_ifru.ifru_data = &p;
+  sock = socket(AF_INET, SOCK_DGRAM, 0);
+  code = ioctl(sock, SIOCADDTUNNEL, &ifr);
+  if (code) {
+    fprintf(stderr, "add tunnel %s failed: %s\n",
+        ifr.ifr_name, strerror(errno));
+  }
+  close(sock);
+  return code;
 }
 #else
 /* Execute cmd and send output to log subsystem */
@@ -542,10 +624,27 @@ gogoc_status tspSetupInterface(tConf *c, tTunnel *t)
   Display(LOG_LEVEL_2, ELInfo, "tspSetupInterface", STR_GEN_SCRIPT_EXEC_SUCCESS);
 #else
   {
-    ifdown("tun", 0);
-    ifup("tun", t->client_address_ipv6, 128, 1280);
+    char *interface = NULL;
+    Display(LOG_LEVEL_2, ELInfo, "tspSetupInterface", "...");
+    if (pal_strcasecmp(t->type, STR_XML_TUNNELMODE_V6V4) == 0)
+    {
+      interface = c->if_tunnel_v6v4;
+      del_tunnel(interface);
+      sleep(1);
+      add_tunnel(interface, t->server_address_ipv4, NULL);
+      Display(LOG_LEVEL_2, ELInfo, "tspSetupInterface", "v6v4");
+    } else if (pal_strcasecmp(t->type, STR_XML_TUNNELMODE_V6UDPV4) == 0) {
+      interface = c->if_tunnel_v6udpv4;
+      Display(LOG_LEVEL_2, ELInfo, "tspSetupInterface", "v6udpv4");
+    } else {
+      return make_status(CTX_TUNINTERFACESETUP, ERR_INTERFACE_SETUP_FAILED);
+    }
+    Display(LOG_LEVEL_2, ELInfo, "tspSetupInterface", interface);
+    ifdown(interface, 0);
+    Display(LOG_LEVEL_2, ELInfo, "tspSetupInterface", t->client_address_ipv6);
+    ifup(interface, t->client_address_ipv6, 128, 1280);
     delroute();
-    addroute();
+    addroute(interface);
   }
 #endif
 
@@ -619,7 +718,12 @@ gogoc_status tspTearDownTunnel( tConf* pConf, tTunnel* pTunInfo )
   Display(LOG_LEVEL_2, ELInfo, "tspTearDownTunnel", STR_GEN_SCRIPT_EXEC_SUCCESS );
 #else
   delroute();
-  ifdown("tun", 1);
+  if (pal_strcasecmp(pTunInfo->type, STR_XML_TUNNELMODE_V6V4) == 0)
+  {
+      del_tunnel(pConf->if_tunnel_v6v4);
+  } else if (pal_strcasecmp(pTunInfo->type, STR_XML_TUNNELMODE_V6UDPV4) == 0) {
+      del_tunnel(pConf->if_tunnel_v6udpv4);
+  }
 #endif
 
 

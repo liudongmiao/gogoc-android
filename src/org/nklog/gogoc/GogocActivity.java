@@ -178,7 +178,10 @@ public class GogocActivity extends Activity
 			String line;
 			BufferedReader br = new BufferedReader(new FileReader("/proc/net/if_inet6"), 1024);
 			while ((line = br.readLine()) != null) {
-				if (line.contains("tun")) {
+				if (line.startsWith("fe80") || line.startsWith("0000")) {
+					continue;
+				}
+				if (line.contains("tun") || line.contains("sit")) {
 					StringBuilder sb = new StringBuilder("");
 					for (int i = 0; i < 8; i++) {
 						sb.append(line.substring(i * 4, (i + 1) * 4));

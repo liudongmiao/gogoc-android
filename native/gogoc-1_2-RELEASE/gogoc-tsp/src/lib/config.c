@@ -151,7 +151,7 @@ gogoc_status tspReadConfigFile( char* szFile, tConf* pConf )
 
   pConf->if_prefix = pal_strdup("");
   pConf->dns_server = pal_strdup("");
-  pConf->tunnel_mode = V6UDPV4;
+  pConf->tunnel_mode = V6ANYV4;
   pConf->if_tunnel_v6v4 = pal_strdup("sit1");
   pConf->if_tunnel_v6udpv4 = pal_strdup("tun");
   pConf->if_tunnel_v4v6 = pal_strdup("sit0");
@@ -223,6 +223,8 @@ gogoc_status tspReadConfigFile( char* szFile, tConf* pConf )
         pConf->tunnel_mode = V4V6;
       } else if (strcmp(value, "v6udpv4") == 0) {
         pConf->tunnel_mode = V6UDPV4;
+      } else if (strcmp(value, "v6anyv4") == 0) {
+        pConf->tunnel_mode = V6ANYV4;
       }
     } else if (strcmp(name, "if_tunnel_v6v4") == 0) {
       pConf->if_tunnel_v6v4 = pal_strdup(value);

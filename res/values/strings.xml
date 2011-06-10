@@ -12,7 +12,7 @@
     <string name="gogoc_error">Cannot Run Gogoc.</string>
     <string name="ipv6_error">IPv6 is not supported.</string>
     <string name="tun">TUN/TAP</string>
-    <string name="tunerror">Cannot initial the TUN/TAP module, please copy one to &lt;SDCARD&gt;/.gogoc/tun.ko. Do you want to some help to compile the module manually?</string>
+    <string name="tunerror">Cannot initial the TUN/TAP module, please copy one to &lt;SDCARD&gt;/.gogoc/tun.ko. If the device has gotten a public IPv4 address, tun is optional. Do you want to some help to compile the module manually?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="help">en.htm</string>

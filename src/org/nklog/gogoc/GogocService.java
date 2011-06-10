@@ -137,7 +137,6 @@ public class GogocService extends Service
 			if (retcode != 0) {
 				Log.d(TAG, "insmod error, retcode = " + retcode);
 				sendToActivity("E", "module");
-				return false;
 			}
 			Log.d(TAG, "insmod ok, retcode = " + retcode);
 		}
